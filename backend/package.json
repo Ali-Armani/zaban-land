@@ -1,0 +1,30 @@
+name	"zaban-land-backend"
+version	"1.0.0"
+description	"Backend API for Zaban Land - English learning platform for kids and teens"
+main	"src/server.js"
+type	"commonjs"
+scripts	
+start	"node src/server.js"
+dev	"nodemon src/server.js"
+prisma:generate	"prisma generate"
+prisma:migrate	"prisma migrate dev"
+prisma:studio	"prisma studio"
+seed	"node prisma/seed.js"
+dependencies	
+@prisma/client	"^5.19.1"
+bcryptjs	"^2.4.3"
+cookie-parser	"^1.4.6"
+cors	"^2.8.5"
+csurf	"^1.11.0"
+dotenv	"^16.4.5"
+express	"^4.19.2"
+express-rate-limit	"^7.4.0"
+express-validator	"^7.2.0"
+helmet	"^7.1.0"
+jsonwebtoken	"^9.0.2"
+morgan	"^1.10.0"
+devDependencies	
+nodemon	"^3.1.4"
+prisma	"^5.19.1"
+dependencies
+cookie-parser
