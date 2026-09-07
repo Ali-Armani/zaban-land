@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import AdBanner from '../components/AdBanner';
-import heroImage from '../assets/hero-illustration.png';
+import heroImage from '../assets/hero-illustration.jpg';
 import './Home.css';
 
 export default function Home() {
