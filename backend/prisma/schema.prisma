@@ -1,0 +1,149 @@
+// Zaban Land - Prisma schema
+// Run: npx prisma migrate dev --name init   (after setting DATABASE_URL in .env)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  PRO
+  ADMIN
+}
+
+enum CardType {
+  VOCABULARY
+  IDIOM
+  GRAMMAR
+}
+
+enum Level {
+  BEGINNER
+  ELEMENTARY
+  INTERMEDIATE
+  UPPER_INTERMEDIATE
+  ADVANCED
+}
+
+model User {
+  id              String    @id @default(uuid())
+  username        String    @unique
+  email           String?   @unique
+  mobile          String?   @unique
+  passwordHash    String
+  role            Role      @default(USER)
+  parentalConsent Boolean   @default(false)
+  dateOfBirth     DateTime?
+  proExpiresAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  progress        UserCardProgress[]
+  quizAttempts    QuizAttempt[]
+  payments        Payment[]
+
+  @@index([email])
+  @@index([mobile])
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  level       Level
+  order       Int      @default(0)
+  isProOnly   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  cards       Card[]
+  quizzes     Quiz[]
+}
+
+model Card {
+  id         String   @id @default(uuid())
+  lessonId   String
+  lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  type       CardType
+  term       String
+  definition String
+  example    String?
+  createdAt  DateTime @default(now())
+
+  progress   UserCardProgress[]
+}
+
+// Leitner spaced-repetition tracking - one row per user per card
+model UserCardProgress {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId       String
+  card         Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  box          Int       @default(1) // Leitner box 1-5
+  nextReviewAt DateTime  @default(now())
+  lastResult   Boolean?
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, cardId])
+  @@index([userId, nextReviewAt])
+}
+
+enum QuizFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model Quiz {
+  id        String        @id @default(uuid())
+  lessonId  String?
+  lesson    Lesson?       @relation(fields: [lessonId], references: [id])
+  title     String
+  frequency QuizFrequency
+  createdAt DateTime      @default(now())
+
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+}
+
+model QuizQuestion {
+  id           String @id @default(uuid())
+  quizId       String
+  quiz         Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  prompt       String
+  choices      Json
+  correctIndex Int
+}
+
+model QuizAttempt {
+  id      String   @id @default(uuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId  String
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score   Int
+  total   Int
+  takenAt DateTime @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      String
+  providerRefId String?
+  amount        Int
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+}
